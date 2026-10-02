@@ -1,13 +1,65 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
 ArrowRight,
-BriefcaseBusiness,
 CheckCircle2,
+Clock3,
 Mail,
 MapPin,
 MessageSquare,
 Phone,
+Send,
 } from "lucide-react";
+
+const contactSchema = z.object({
+fullName: z
+.string()
+.trim()
+.min(2, "Please enter your full name.")
+.max(100, "Name must be less than 100 characters."),
+
+company: z
+.string()
+.trim()
+.max(100, "Company name must be less than 100 characters.")
+.optional()
+.or(z.literal("")),
+
+email: z
+.string()
+.trim()
+.email("Please enter a valid email address."),
+
+phone: z
+.string()
+.trim()
+.regex(/^[+]?[0-9\s()-]{10,15}$/, "Please enter a valid phone number."),
+
+service: z
+.string()
+.min(1, "Please select a service."),
+
+budget: z
+.string()
+.min(1, "Please select an estimated budget."),
+
+timeline: z
+.string()
+.min(1, "Please select an expected timeline."),
+
+projectDetails: z
+.string()
+.trim()
+.min(20, "Please provide at least 20 characters about your project.")
+.max(2000, "Project details must be less than 2000 characters."),
+});
+
+type ContactFormData = z.infer<typeof contactSchema>;
 
 const services = [
 "Web Development",
@@ -19,23 +71,39 @@ const services = [
 "Software Development",
 "API & Backend Development",
 "Cloud & Deployment",
-"Digital Marketing",
-"Maintenance & Support",
-"IT Consulting",
+"Digital Marketing Solutions",
+"Website Maintenance & Support",
+"IT Consulting & Technology Solutions",
 ];
 
-const contactPoints = [
+const budgetOptions = [
+"Under ₹50,000",
+"₹50,000 – ₹1,00,000",
+"₹1,00,000 – ₹3,00,000",
+"₹3,00,000+",
+"Prefer to discuss",
+];
+
+const timelineOptions = [
+"As soon as possible",
+"1–2 months",
+"2–3 months",
+"3+ months",
+"Flexible",
+];
+
+const contactInfo = [
 {
 icon: Mail,
 title: "Email",
 value: "[hello@nexabizz.com](mailto:hello@nexabizz.com)",
-description: "For project enquiries and general questions.",
+description: "For general enquiries and project discussions.",
 },
 {
 icon: Phone,
 title: "Phone",
 value: "+91 00000 00000",
-description: "For direct project discussions.",
+description: "For direct project conversations.",
 },
 {
 icon: MapPin,
@@ -45,399 +113,474 @@ description: "Working with businesses through digital collaboration.",
 },
 ];
 
-const processSteps = [
+const nextSteps = [
 {
-number: "01",
-title: "Tell us about your idea",
+icon: MessageSquare,
+title: "Share your requirements",
 description:
-"Share your business goal, current challenge, or the digital product you want to build.",
+"Tell us about your business, project goals, and the kind of solution you need.",
 },
 {
-number: "02",
-title: "Discuss the requirements",
+icon: Clock3,
+title: "Discuss the project",
 description:
-"We can discuss features, users, technology, scope, priorities, and any existing systems.",
+"We can review your requirements, clarify priorities, and discuss possible approaches.",
 },
 {
-number: "03",
-title: "Plan the solution",
+icon: CheckCircle2,
+title: "Plan the next step",
 description:
-"The requirements can then be organized into a practical development and delivery approach.",
+"Once the scope is clear, the project can move toward a suitable proposal and delivery plan.",
 },
 ];
 
+function FieldError({ message }: { message?: string }) {
+if (!message) {
+return null;
+}
+
+return ( <p className="mt-1.5 text-sm text-red-600" role="alert">
+{message} </p>
+);
+}
+
 export default function ContactPage() {
-return ( <div className="bg-white text-slate-950">
-{/* Hero */} <section className="border-b border-slate-200 bg-slate-50"> <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8 lg:py-28"> <div className="max-w-3xl"> <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
+const [submitted, setSubmitted] = useState(false);
+
+const {
+register,
+handleSubmit,
+reset,
+formState: { errors, isSubmitting },
+} = useForm<ContactFormData>({
+resolver: zodResolver(contactSchema),
+defaultValues: {
+fullName: "",
+company: "",
+email: "",
+phone: "",
+service: "",
+budget: "",
+timeline: "",
+projectDetails: "",
+},
+});
+
+const onSubmit = async (data: ContactFormData) => {
+console.log("Validated contact form data:", data);
+
+```
+await new Promise((resolve) => setTimeout(resolve, 500));
+
+setSubmitted(true);
+reset();
+```
+
+};
+
+return ( <div className="bg-white">
+{/* Hero */} <section className="border-b border-slate-200 bg-slate-50"> <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-24"> <div className="max-w-3xl"> <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
 Contact NexaBizz </p>
 
-        <h1 className="mt-5 text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+        <h1 className="mt-4 text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
           Let&apos;s discuss your next digital project.
         </h1>
 
-        <p className="mt-6 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
-          Have a website idea, business application, e-commerce project,
-          mobile app, or automation requirement? Share some details and
-          start a conversation.
+        <p className="mt-6 text-lg leading-8 text-slate-600">
+          Tell us what you are building, what you want to improve, or
+          where your business needs digital support. We can start with a
+          conversation.
         </p>
       </div>
     </div>
   </section>
 
-  {/* Contact Content */}
-  <section className="bg-white">
-    <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-      <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
-        {/* Contact Information */}
+  {/* Contact Information */}
+  <section className="py-16 sm:py-20">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="grid gap-6 md:grid-cols-3">
+        {contactInfo.map((item) => {
+          const Icon = item.icon;
+
+          return (
+            <div
+              key={item.title}
+              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+            >
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-950 text-white">
+                <Icon className="h-5 w-5" />
+              </div>
+
+              <h2 className="mt-5 text-lg font-bold text-slate-950">
+                {item.title}
+              </h2>
+
+              <p className="mt-2 text-base font-medium text-slate-700">
+                {item.value}
+              </p>
+
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                {item.description}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  </section>
+
+  {/* Contact Form */}
+  <section className="border-y border-slate-200 bg-slate-50 py-16 sm:py-20">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="grid gap-12 lg:grid-cols-[0.75fr_1.25fr] lg:items-start">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
-            Get in Touch
+          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
+            Project Enquiry
           </p>
 
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
-            Start with a simple conversation.
+            Tell us about your project.
           </h2>
 
-          <p className="mt-5 max-w-xl text-base leading-8 text-slate-600">
-            You do not need to have every technical detail figured out
-            before contacting us. Start with your business goal and we can
-            work through the requirements together.
+          <p className="mt-5 leading-7 text-slate-600">
+            Share a few details about your business and requirements. The
+            more context you provide, the easier it is to understand what
+            you are looking to build.
           </p>
 
-          <div className="mt-9 space-y-4">
-            {contactPoints.map((point) => {
-              const Icon = point.icon;
-
-              return (
-                <div
-                  key={point.title}
-                  className="rounded-2xl border border-slate-200 bg-white p-5"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-950">
-                      <Icon className="h-5 w-5" />
-                    </div>
-
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-                        {point.title}
-                      </p>
-
-                      <p className="mt-1 break-words text-sm font-semibold text-slate-950">
-                        {point.value}
-                      </p>
-
-                      <p className="mt-1 text-sm leading-6 text-slate-600">
-                        {point.description}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="mt-8 rounded-2xl bg-slate-950 p-6 text-white">
-            <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-800">
-                <MessageSquare className="h-5 w-5" />
-              </div>
-
-              <div>
-                <h3 className="font-semibold">
-                  Not sure where to start?
-                </h3>
-
-                <p className="mt-2 text-sm leading-7 text-slate-300">
-                  That&apos;s okay. Tell us what you are trying to achieve,
-                  and we can identify the relevant questions and possible
-                  next steps.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Form */}
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 lg:p-10">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
-              Project Enquiry
-            </p>
-
-            <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
-              Tell us about your project.
-            </h2>
-
-            <p className="mt-3 text-sm leading-7 text-slate-600">
-              Complete the form below with whatever information you already
-              have. More detailed functionality will be connected in a
-              later development stage.
-            </p>
-          </div>
-
-          <form className="mt-8 space-y-6">
-            <div className="grid gap-5 sm:grid-cols-2">
-              <div>
-                <label
-                  htmlFor="name"
-                  className="text-sm font-semibold text-slate-800"
-                >
-                  Full Name
-                </label>
-
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  placeholder="Your name"
-                  className="mt-2 h-11 w-full rounded-lg border border-slate-300 bg-white px-4 text-sm text-slate-950 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="company"
-                  className="text-sm font-semibold text-slate-800"
-                >
-                  Company
-                </label>
-
-                <input
-                  id="company"
-                  name="company"
-                  type="text"
-                  placeholder="Company or business name"
-                  className="mt-2 h-11 w-full rounded-lg border border-slate-300 bg-white px-4 text-sm text-slate-950 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-5 sm:grid-cols-2">
-              <div>
-                <label
-                  htmlFor="email"
-                  className="text-sm font-semibold text-slate-800"
-                >
-                  Email Address
-                </label>
-
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  className="mt-2 h-11 w-full rounded-lg border border-slate-300 bg-white px-4 text-sm text-slate-950 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="phone"
-                  className="text-sm font-semibold text-slate-800"
-                >
-                  Phone Number
-                </label>
-
-                <input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  placeholder="+91"
-                  className="mt-2 h-11 w-full rounded-lg border border-slate-300 bg-white px-4 text-sm text-slate-950 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label
-                htmlFor="service"
-                className="text-sm font-semibold text-slate-800"
-              >
-                Service
-              </label>
-
-              <select
-                id="service"
-                name="service"
-                defaultValue=""
-                className="mt-2 h-11 w-full rounded-lg border border-slate-300 bg-white px-4 text-sm text-slate-950 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-              >
-                <option value="" disabled>
-                  Select a service
-                </option>
-
-                {services.map((service) => (
-                  <option key={service} value={service}>
-                    {service}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="grid gap-5 sm:grid-cols-2">
-              <div>
-                <label
-                  htmlFor="budget"
-                  className="text-sm font-semibold text-slate-800"
-                >
-                  Estimated Budget
-                </label>
-
-                <select
-                  id="budget"
-                  name="budget"
-                  defaultValue=""
-                  className="mt-2 h-11 w-full rounded-lg border border-slate-300 bg-white px-4 text-sm text-slate-950 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-                >
-                  <option value="" disabled>
-                    Select a range
-                  </option>
-                  <option value="under-50k">Under ₹50,000</option>
-                  <option value="50k-1l">₹50,000 – ₹1,00,000</option>
-                  <option value="1l-3l">₹1,00,000 – ₹3,00,000</option>
-                  <option value="3l-plus">₹3,00,000+</option>
-                  <option value="discuss">Prefer to discuss</option>
-                </select>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="timeline"
-                  className="text-sm font-semibold text-slate-800"
-                >
-                  Expected Timeline
-                </label>
-
-                <select
-                  id="timeline"
-                  name="timeline"
-                  defaultValue=""
-                  className="mt-2 h-11 w-full rounded-lg border border-slate-300 bg-white px-4 text-sm text-slate-950 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-                >
-                  <option value="" disabled>
-                    Select a timeline
-                  </option>
-                  <option value="urgent">As soon as possible</option>
-                  <option value="1-2-months">1–2 months</option>
-                  <option value="2-3-months">2–3 months</option>
-                  <option value="3-plus-months">3+ months</option>
-                  <option value="flexible">Flexible</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label
-                htmlFor="message"
-                className="text-sm font-semibold text-slate-800"
-              >
-                Project Details
-              </label>
-
-              <textarea
-                id="message"
-                name="message"
-                rows={6}
-                placeholder="Tell us about your business, project idea, required features, or current challenge..."
-                className="mt-2 w-full resize-y rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm leading-6 text-slate-950 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-              />
-            </div>
-
-            <div className="rounded-xl bg-slate-50 p-4">
-              <p className="text-xs leading-6 text-slate-500">
-                This enquiry form is currently a frontend interface. Form
-                submission, validation, database storage, and email
-                notifications will be connected in a later development
-                stage.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-slate-950 px-6 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
-            >
-              Send Project Enquiry
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  {/* Process */}
-  <section className="border-y border-slate-200 bg-slate-50">
-    <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-      <div className="max-w-2xl">
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
-          What Happens Next
-        </p>
-
-        <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
-          A simple path from enquiry to planning.
-        </h2>
-
-        <p className="mt-4 text-base leading-7 text-slate-600">
-          A good first conversation helps clarify what needs to be built,
-          why it matters, and what the practical next steps could look
-          like.
-        </p>
-      </div>
-
-      <div className="mt-12 grid gap-5 md:grid-cols-3">
-        {processSteps.map((step) => (
-          <div
-            key={step.number}
-            className="rounded-2xl border border-slate-200 bg-white p-7"
-          >
-            <span className="text-sm font-bold text-slate-400">
-              {step.number}
-            </span>
-
-            <h3 className="mt-5 text-xl font-bold text-slate-950">
-              {step.title}
+          <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6">
+            <h3 className="font-semibold text-slate-950">
+              What happens next?
             </h3>
 
-            <p className="mt-3 text-sm leading-7 text-slate-600">
-              {step.description}
-            </p>
+            <ul className="mt-5 space-y-4">
+              {nextSteps.map((step) => {
+                const Icon = step.icon;
+
+                return (
+                  <li key={step.title} className="flex items-start gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-900">
+                      <Icon className="h-4 w-4" />
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-semibold text-slate-950">
+                        {step.title}
+                      </p>
+
+                      <p className="mt-1 text-sm leading-6 text-slate-500">
+                        {step.description}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
-        ))}
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          {submitted ? (
+            <div className="flex min-h-[500px] flex-col items-center justify-center text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-950 text-white">
+                <CheckCircle2 className="h-7 w-7" />
+              </div>
+
+              <h2 className="mt-6 text-2xl font-bold text-slate-950">
+                Form validated successfully
+              </h2>
+
+              <p className="mt-3 max-w-md leading-7 text-slate-600">
+                Your enquiry passed the frontend validation. The next
+                step will connect this form to the NexaBizz backend and
+                enquiry system.
+              </p>
+
+              <button
+                type="button"
+                onClick={() => setSubmitted(false)}
+                className="mt-7 inline-flex items-center justify-center gap-2 rounded-lg bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+              >
+                Submit Another Enquiry
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit(onSubmit)} noValidate>
+              <div className="grid gap-6 sm:grid-cols-2">
+                {/* Full Name */}
+                <div>
+                  <label
+                    htmlFor="fullName"
+                    className="text-sm font-semibold text-slate-900"
+                  >
+                    Full Name <span className="text-red-500">*</span>
+                  </label>
+
+                  <input
+                    id="fullName"
+                    type="text"
+                    placeholder="Your full name"
+                    {...register("fullName")}
+                    className={`mt-2 w-full rounded-lg border px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:ring-2 ${
+                      errors.fullName
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-100"
+                        : "border-slate-200 focus:border-slate-950 focus:ring-slate-100"
+                    }`}
+                  />
+
+                  <FieldError message={errors.fullName?.message} />
+                </div>
+
+                {/* Company */}
+                <div>
+                  <label
+                    htmlFor="company"
+                    className="text-sm font-semibold text-slate-900"
+                  >
+                    Company
+                  </label>
+
+                  <input
+                    id="company"
+                    type="text"
+                    placeholder="Company name"
+                    {...register("company")}
+                    className={`mt-2 w-full rounded-lg border px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:ring-2 ${
+                      errors.company
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-100"
+                        : "border-slate-200 focus:border-slate-950 focus:ring-slate-100"
+                    }`}
+                  />
+
+                  <FieldError message={errors.company?.message} />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="text-sm font-semibold text-slate-900"
+                  >
+                    Email Address{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+
+                  <input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    {...register("email")}
+                    className={`mt-2 w-full rounded-lg border px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:ring-2 ${
+                      errors.email
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-100"
+                        : "border-slate-200 focus:border-slate-950 focus:ring-slate-100"
+                    }`}
+                  />
+
+                  <FieldError message={errors.email?.message} />
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label
+                    htmlFor="phone"
+                    className="text-sm font-semibold text-slate-900"
+                  >
+                    Phone Number{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+
+                  <input
+                    id="phone"
+                    type="tel"
+                    placeholder="+91 98765 43210"
+                    {...register("phone")}
+                    className={`mt-2 w-full rounded-lg border px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:ring-2 ${
+                      errors.phone
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-100"
+                        : "border-slate-200 focus:border-slate-950 focus:ring-slate-100"
+                    }`}
+                  />
+
+                  <FieldError message={errors.phone?.message} />
+                </div>
+
+                {/* Service */}
+                <div>
+                  <label
+                    htmlFor="service"
+                    className="text-sm font-semibold text-slate-900"
+                  >
+                    Service <span className="text-red-500">*</span>
+                  </label>
+
+                  <select
+                    id="service"
+                    {...register("service")}
+                    className={`mt-2 w-full rounded-lg border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:ring-2 ${
+                      errors.service
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-100"
+                        : "border-slate-200 focus:border-slate-950 focus:ring-slate-100"
+                    }`}
+                  >
+                    <option value="">Select a service</option>
+
+                    {services.map((service) => (
+                      <option key={service} value={service}>
+                        {service}
+                      </option>
+                    ))}
+                  </select>
+
+                  <FieldError message={errors.service?.message} />
+                </div>
+
+                {/* Budget */}
+                <div>
+                  <label
+                    htmlFor="budget"
+                    className="text-sm font-semibold text-slate-900"
+                  >
+                    Estimated Budget{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+
+                  <select
+                    id="budget"
+                    {...register("budget")}
+                    className={`mt-2 w-full rounded-lg border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:ring-2 ${
+                      errors.budget
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-100"
+                        : "border-slate-200 focus:border-slate-950 focus:ring-slate-100"
+                    }`}
+                  >
+                    <option value="">Select a budget</option>
+
+                    {budgetOptions.map((budget) => (
+                      <option key={budget} value={budget}>
+                        {budget}
+                      </option>
+                    ))}
+                  </select>
+
+                  <FieldError message={errors.budget?.message} />
+                </div>
+
+                {/* Timeline */}
+                <div className="sm:col-span-2">
+                  <label
+                    htmlFor="timeline"
+                    className="text-sm font-semibold text-slate-900"
+                  >
+                    Expected Timeline{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+
+                  <select
+                    id="timeline"
+                    {...register("timeline")}
+                    className={`mt-2 w-full rounded-lg border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:ring-2 ${
+                      errors.timeline
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-100"
+                        : "border-slate-200 focus:border-slate-950 focus:ring-slate-100"
+                    }`}
+                  >
+                    <option value="">Select a timeline</option>
+
+                    {timelineOptions.map((timeline) => (
+                      <option key={timeline} value={timeline}>
+                        {timeline}
+                      </option>
+                    ))}
+                  </select>
+
+                  <FieldError message={errors.timeline?.message} />
+                </div>
+
+                {/* Project Details */}
+                <div className="sm:col-span-2">
+                  <label
+                    htmlFor="projectDetails"
+                    className="text-sm font-semibold text-slate-900"
+                  >
+                    Project Details{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+
+                  <textarea
+                    id="projectDetails"
+                    rows={7}
+                    placeholder="Tell us about your business, project goals, required features, target users, or any other useful details..."
+                    {...register("projectDetails")}
+                    className={`mt-2 w-full resize-y rounded-lg border px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:ring-2 ${
+                      errors.projectDetails
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-100"
+                        : "border-slate-200 focus:border-slate-950 focus:ring-slate-100"
+                    }`}
+                  />
+
+                  <FieldError
+                    message={errors.projectDetails?.message}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+                <p className="text-xs leading-5 text-slate-500">
+                  This form currently performs frontend validation only.
+                  Your information is not being sent to a backend or
+                  stored in a database yet.
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-slate-950 px-6 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSubmitting ? (
+                  <>
+                    Validating...
+                  </>
+                ) : (
+                  <>
+                    Submit Enquiry
+                    <Send className="h-4 w-4" />
+                  </>
+                )}
+              </button>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   </section>
 
   {/* CTA */}
-  <section className="bg-slate-950">
-    <div className="mx-auto max-w-7xl px-4 py-20 text-center sm:px-6 lg:px-8">
-      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
-        Ready to Start?
-      </p>
+  <section className="border-t border-slate-200 bg-slate-950 py-16 text-white sm:py-20">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+        <div className="max-w-2xl">
+          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-400">
+            Start a Conversation
+          </p>
 
-      <h2 className="mx-auto mt-4 max-w-3xl text-3xl font-bold tracking-tight text-white sm:text-4xl">
-        Let&apos;s turn your digital requirement into a clear plan.
-      </h2>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+            Have a digital idea in mind?
+          </h2>
 
-      <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-slate-300">
-        Whether you have a complete specification or only an early idea,
-        the first step is a conversation.
-      </p>
+          <p className="mt-4 leading-7 text-slate-400">
+            Tell us what you are trying to build and explore how a
+            structured digital solution could support your business.
+          </p>
+        </div>
 
-      <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
         <Link
           href="/services"
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-slate-200"
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-slate-200"
         >
           Explore Services
           <ArrowRight className="h-4 w-4" />
-        </Link>
-
-        <Link
-          href="/case-studies"
-          className="inline-flex items-center justify-center rounded-lg border border-slate-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-900"
-        >
-          View Case Studies
         </Link>
       </div>
     </div>

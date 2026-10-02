@@ -169,12 +169,12 @@ projectDetails: "",
 const onSubmit = async (data: ContactFormData) => {
 console.log("Validated contact form data:", data);
 
-```
+
 await new Promise((resolve) => setTimeout(resolve, 500));
 
 setSubmitted(true);
 reset();
-```
+
 
 };
 

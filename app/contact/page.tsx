@@ -40,17 +40,11 @@ phone: z
 .trim()
 .regex(/^[+]?[0-9\s()-]{10,15}$/, "Please enter a valid phone number."),
 
-service: z
-.string()
-.min(1, "Please select a service."),
+service: z.string().min(1, "Please select a service."),
 
-budget: z
-.string()
-.min(1, "Please select an estimated budget."),
+budget: z.string().min(1, "Please select an estimated budget."),
 
-timeline: z
-.string()
-.min(1, "Please select an expected timeline."),
+timeline: z.string().min(1, "Please select an expected timeline."),
 
 projectDetails: z
 .string()
@@ -146,6 +140,7 @@ return ( <p className="mt-1.5 text-sm text-red-600" role="alert">
 
 export default function ContactPage() {
 const [submitted, setSubmitted] = useState(false);
+const [submitError, setSubmitError] = useState("");
 
 const {
 register,
@@ -167,13 +162,35 @@ projectDetails: "",
 });
 
 const onSubmit = async (data: ContactFormData) => {
-console.log("Validated contact form data:", data);
+setSubmitError("");
 
+try {
+  const response = await fetch("/api/contact", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
 
-await new Promise((resolve) => setTimeout(resolve, 500));
+  const result = await response.json();
 
-setSubmitted(true);
-reset();
+  if (!response.ok || !result.success) {
+    setSubmitError(
+      result.message || "Something went wrong. Please try again.",
+    );
+    return;
+  }
+
+  setSubmitted(true);
+  reset();
+} catch (error) {
+  console.error("Contact form submission error:", error);
+
+  setSubmitError(
+    "Unable to connect to the server. Please try again in a moment.",
+  );
+}
 
 
 };
@@ -181,6 +198,7 @@ reset();
 return ( <div className="bg-white">
 {/* Hero */} <section className="border-b border-slate-200 bg-slate-50"> <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-24"> <div className="max-w-3xl"> <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
 Contact NexaBizz </p>
+
 
         <h1 className="mt-4 text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
           Let&apos;s discuss your next digital project.
@@ -287,18 +305,24 @@ Contact NexaBizz </p>
               </div>
 
               <h2 className="mt-6 text-2xl font-bold text-slate-950">
-                Form validated successfully
+                Your enquiry was received
               </h2>
 
               <p className="mt-3 max-w-md leading-7 text-slate-600">
-                Your enquiry passed the frontend validation. The next
-                step will connect this form to the NexaBizz backend and
-                enquiry system.
+                Your enquiry was successfully sent to the NexaBizz API
+                and saved in the enquiry database.
+              </p>
+
+              <p className="mt-3 max-w-md text-sm leading-6 text-slate-500">
+                Email notifications will be added in a later stage.
               </p>
 
               <button
                 type="button"
-                onClick={() => setSubmitted(false)}
+                onClick={() => {
+                  setSubmitted(false);
+                  setSubmitError("");
+                }}
                 className="mt-7 inline-flex items-center justify-center gap-2 rounded-lg bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
               >
                 Submit Another Enquiry
@@ -525,11 +549,21 @@ Contact NexaBizz </p>
                 </div>
               </div>
 
+              {submitError && (
+                <div
+                  className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3"
+                  role="alert"
+                >
+                  <p className="text-sm leading-6 text-red-700">
+                    {submitError}
+                  </p>
+                </div>
+              )}
+
               <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
                 <p className="text-xs leading-5 text-slate-500">
-                  This form currently performs frontend validation only.
-                  Your information is not being sent to a backend or
-                  stored in a database yet.
+                  Your enquiry will be validated by the NexaBizz backend
+                  and securely stored in the project database.
                 </p>
               </div>
 
@@ -539,9 +573,7 @@ Contact NexaBizz </p>
                 className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-slate-950 px-6 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isSubmitting ? (
-                  <>
-                    Validating...
-                  </>
+                  <>Sending...</>
                 ) : (
                   <>
                     Submit Enquiry
@@ -586,5 +618,6 @@ Contact NexaBizz </p>
     </div>
   </section>
 </div>
+
 );
 }

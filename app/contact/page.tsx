@@ -191,8 +191,6 @@ try {
     "Unable to connect to the server. Please try again in a moment.",
   );
 }
-
-
 };
 
 return ( <div className="bg-white">
@@ -309,12 +307,13 @@ Contact NexaBizz </p>
               </h2>
 
               <p className="mt-3 max-w-md leading-7 text-slate-600">
-                Your enquiry was successfully sent to the NexaBizz API
-                and saved in the enquiry database.
+                Your enquiry was successfully saved in the NexaBizz
+                database and the email notification was sent.
               </p>
 
               <p className="mt-3 max-w-md text-sm leading-6 text-slate-500">
-                Email notifications will be added in a later stage.
+                Thank you for contacting NexaBizz. We can now review your
+                project requirements and continue the discussion.
               </p>
 
               <button
@@ -385,8 +384,7 @@ Contact NexaBizz </p>
                     htmlFor="email"
                     className="text-sm font-semibold text-slate-900"
                   >
-                    Email Address{" "}
-                    <span className="text-red-500">*</span>
+                    Email Address <span className="text-red-500">*</span>
                   </label>
 
                   <input
@@ -410,8 +408,7 @@ Contact NexaBizz </p>
                     htmlFor="phone"
                     className="text-sm font-semibold text-slate-900"
                   >
-                    Phone Number{" "}
-                    <span className="text-red-500">*</span>
+                    Phone Number <span className="text-red-500">*</span>
                   </label>
 
                   <input
@@ -562,8 +559,9 @@ Contact NexaBizz </p>
 
               <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
                 <p className="text-xs leading-5 text-slate-500">
-                  Your enquiry will be validated by the NexaBizz backend
-                  and securely stored in the project database.
+                  Your enquiry will be validated by the NexaBizz backend,
+                  securely stored in the project database, and sent to the
+                  NexaBizz notification email.
                 </p>
               </div>
 
@@ -618,6 +616,5 @@ Contact NexaBizz </p>
     </div>
   </section>
 </div>
-
 );
 }

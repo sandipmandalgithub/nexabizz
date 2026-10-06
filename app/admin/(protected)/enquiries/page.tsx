@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  ChevronDown,
   Eye,
+  Filter,
   Loader2,
   Mail,
   Phone,
@@ -30,6 +32,7 @@ export default function AdminEnquiriesPage() {
 
   const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedService, setSelectedService] = useState("All Services");
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [selectedEnquiry, setSelectedEnquiry] =
@@ -70,23 +73,46 @@ export default function AdminEnquiriesPage() {
     fetchEnquiries();
   }, [router]);
 
+  const serviceOptions = useMemo(() => {
+    const services = Array.from(
+      new Set(
+        enquiries
+          .map((enquiry) => enquiry.service.trim())
+          .filter(Boolean),
+      ),
+    );
+
+    return services.sort((a, b) => a.localeCompare(b));
+  }, [enquiries]);
+
   const filteredEnquiries = enquiries.filter((enquiry) => {
     const searchValue = searchTerm.toLowerCase().trim();
 
-    if (!searchValue) {
-      return true;
-    }
-
-    return (
+    const matchesSearch =
+      !searchValue ||
       enquiry.fullName.toLowerCase().includes(searchValue) ||
       (enquiry.company || "")
         .toLowerCase()
         .includes(searchValue) ||
       enquiry.email.toLowerCase().includes(searchValue) ||
       enquiry.phone.toLowerCase().includes(searchValue) ||
-      enquiry.service.toLowerCase().includes(searchValue)
-    );
+      enquiry.service.toLowerCase().includes(searchValue);
+
+    const matchesService =
+      selectedService === "All Services" ||
+      enquiry.service === selectedService;
+
+    return matchesSearch && matchesService;
   });
+
+  const hasActiveFilters =
+    searchTerm.trim() !== "" ||
+    selectedService !== "All Services";
+
+  function clearFilters() {
+    setSearchTerm("");
+    setSelectedService("All Services");
+  }
 
   async function handleDelete(id: string) {
     const shouldDelete = window.confirm(
@@ -179,20 +205,95 @@ export default function AdminEnquiriesPage() {
           </div>
         </div>
 
-        <div className="mb-6">
-          <div className="relative max-w-md">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
+            <div className="flex-1">
+              <label
+                htmlFor="enquiry-search"
+                className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Search
+              </label>
 
-            <input
-              type="search"
-              value={searchTerm}
-              onChange={(event) =>
-                setSearchTerm(event.target.value)
-              }
-              placeholder="Search enquiries..."
-              className="h-11 w-full rounded-lg border border-slate-200 bg-white pl-10 pr-4 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
-            />
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+                <input
+                  id="enquiry-search"
+                  type="search"
+                  value={searchTerm}
+                  onChange={(event) =>
+                    setSearchTerm(event.target.value)
+                  }
+                  placeholder="Search name, email, company, phone..."
+                  className="h-11 w-full rounded-lg border border-slate-200 bg-white pl-10 pr-4 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+                />
+              </div>
+            </div>
+
+            <div className="w-full lg:w-64">
+              <label
+                htmlFor="service-filter"
+                className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Service
+              </label>
+
+              <div className="relative">
+                <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+                <select
+                  id="service-filter"
+                  value={selectedService}
+                  onChange={(event) =>
+                    setSelectedService(event.target.value)
+                  }
+                  className="h-11 w-full appearance-none rounded-lg border border-slate-200 bg-white pl-10 pr-10 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+                >
+                  <option>All Services</option>
+
+                  {serviceOptions.map((service) => (
+                    <option key={service} value={service}>
+                      {service}
+                    </option>
+                  ))}
+                </select>
+
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              </div>
+            </div>
+
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-950"
+              >
+                <X className="h-4 w-4" />
+                Clear Filters
+              </button>
+            )}
           </div>
+
+          {hasActiveFilters && (
+            <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
+              <span className="text-xs font-medium text-slate-500">
+                Active filters:
+              </span>
+
+              {searchTerm.trim() && (
+                <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+                  Search: {searchTerm.trim()}
+                </span>
+              )}
+
+              {selectedService !== "All Services" && (
+                <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+                  Service: {selectedService}
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {errorMessage && (
@@ -225,16 +326,26 @@ export default function AdminEnquiriesPage() {
             <Mail className="h-10 w-10 text-slate-300" />
 
             <h2 className="mt-4 text-lg font-semibold text-slate-900">
-              {searchTerm
+              {hasActiveFilters
                 ? "No matching enquiries"
                 : "No enquiries yet"}
             </h2>
 
             <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
-              {searchTerm
-                ? "Try a different search term."
+              {hasActiveFilters
+                ? "Try changing your search or service filter."
                 : "New enquiries submitted through the contact form will appear here."}
             </p>
+
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="mt-5 rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+              >
+                Clear Filters
+              </button>
+            )}
           </div>
         ) : (
           <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">

@@ -8,19 +8,30 @@ url      = env("DATABASE_URL")
 }
 
 model ContactEnquiry {
-id            String   @id @default(cuid())
-fullName      String
-company       String?
-email         String
-phone         String
-service       String
-budget        String
-timeline      String
-projectDetails String  @db.Text
-createdAt     DateTime @default(now())
-updatedAt     DateTime @updatedAt
+id             String   @id @default(cuid())
+fullName       String
+company        String?
+email          String
+phone          String
+service        String
+budget         String
+timeline       String
+projectDetails String   @db.Text
+createdAt      DateTime @default(now())
+updatedAt      DateTime @updatedAt
 
 @@index([createdAt])
 @@index([email])
 @@map("contact_enquiries")
+}
+
+model Admin {
+id           String   @id @default(cuid())
+name         String
+email        String   @unique
+passwordHash String
+createdAt    DateTime @default(now())
+updatedAt    DateTime @updatedAt
+
+@@map("admins")
 }

@@ -2,9 +2,14 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import {
   CalendarDays,
+  CheckCircle2,
+  CircleDot,
+  Clock3,
   Mail,
   MessageSquare,
+  PhoneCall,
   TrendingUp,
+  XCircle,
 } from "lucide-react";
 
 export default async function AdminDashboardPage() {
@@ -14,6 +19,11 @@ export default async function AdminDashboardPage() {
     monthEnquiries,
     recentEnquiries,
     serviceGroups,
+    newEnquiries,
+    contactedEnquiries,
+    inProgressEnquiries,
+    completedEnquiries,
+    cancelledEnquiries,
   ] = await Promise.all([
     prisma.contactEnquiry.count(),
 
@@ -48,6 +58,7 @@ export default async function AdminDashboardPage() {
         company: true,
         email: true,
         service: true,
+        status: true,
         createdAt: true,
       },
     }),
@@ -64,9 +75,40 @@ export default async function AdminDashboardPage() {
       },
       take: 5,
     }),
+
+    prisma.contactEnquiry.count({
+      where: {
+        status: "NEW",
+      },
+    }),
+
+    prisma.contactEnquiry.count({
+      where: {
+        status: "CONTACTED",
+      },
+    }),
+
+    prisma.contactEnquiry.count({
+      where: {
+        status: "IN_PROGRESS",
+      },
+    }),
+
+    prisma.contactEnquiry.count({
+      where: {
+        status: "COMPLETED",
+      },
+    }),
+
+    prisma.contactEnquiry.count({
+      where: {
+        status: "CANCELLED",
+      },
+    }),
   ]);
 
-  const topService = serviceGroups[0]?.service ?? "No enquiries yet";
+  const topService =
+    serviceGroups[0]?.service ?? "No enquiries yet";
 
   return (
     <main className="min-h-screen bg-slate-50 lg:ml-64">
@@ -180,6 +222,120 @@ export default async function AdminDashboardPage() {
           </div>
         </section>
 
+        <section className="mt-8">
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold text-slate-950">
+              Enquiry Status
+            </h2>
+
+            <p className="mt-1 text-sm text-slate-500">
+              Current enquiry pipeline by status.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
+                  <CircleDot className="h-5 w-5 text-blue-600" />
+                </div>
+
+                <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
+                  New
+                </span>
+              </div>
+
+              <p className="mt-5 text-sm font-medium text-slate-500">
+                New Enquiries
+              </p>
+
+              <p className="mt-1 text-3xl font-bold text-slate-950">
+                {newEnquiries}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50">
+                  <PhoneCall className="h-5 w-5 text-amber-600" />
+                </div>
+
+                <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                  Contacted
+                </span>
+              </div>
+
+              <p className="mt-5 text-sm font-medium text-slate-500">
+                Contacted
+              </p>
+
+              <p className="mt-1 text-3xl font-bold text-slate-950">
+                {contactedEnquiries}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-50">
+                  <Clock3 className="h-5 w-5 text-violet-600" />
+                </div>
+
+                <span className="rounded-full bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700">
+                  In Progress
+                </span>
+              </div>
+
+              <p className="mt-5 text-sm font-medium text-slate-500">
+                In Progress
+              </p>
+
+              <p className="mt-1 text-3xl font-bold text-slate-950">
+                {inProgressEnquiries}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                </div>
+
+                <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                  Completed
+                </span>
+              </div>
+
+              <p className="mt-5 text-sm font-medium text-slate-500">
+                Completed
+              </p>
+
+              <p className="mt-1 text-3xl font-bold text-slate-950">
+                {completedEnquiries}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-50">
+                  <XCircle className="h-5 w-5 text-red-600" />
+                </div>
+
+                <span className="rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">
+                  Cancelled
+                </span>
+              </div>
+
+              <p className="mt-5 text-sm font-medium text-slate-500">
+                Cancelled
+              </p>
+
+              <p className="mt-1 text-3xl font-bold text-slate-950">
+                {cancelledEnquiries}
+              </p>
+            </div>
+          </div>
+        </section>
+
         <section className="mt-8 grid gap-6 lg:grid-cols-3">
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm lg:col-span-2">
             <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
@@ -233,9 +389,33 @@ export default async function AdminDashboardPage() {
                       </p>
                     </div>
 
-                    <div className="flex shrink-0 items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                       <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
                         {enquiry.service}
+                      </span>
+
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                          enquiry.status === "NEW"
+                            ? "bg-blue-50 text-blue-700"
+                            : enquiry.status === "CONTACTED"
+                              ? "bg-amber-50 text-amber-700"
+                              : enquiry.status === "IN_PROGRESS"
+                                ? "bg-violet-50 text-violet-700"
+                                : enquiry.status === "COMPLETED"
+                                  ? "bg-emerald-50 text-emerald-700"
+                                  : "bg-red-50 text-red-700"
+                        }`}
+                      >
+                        {enquiry.status === "NEW"
+                          ? "New"
+                          : enquiry.status === "CONTACTED"
+                            ? "Contacted"
+                            : enquiry.status === "IN_PROGRESS"
+                              ? "In Progress"
+                              : enquiry.status === "COMPLETED"
+                                ? "Completed"
+                                : "Cancelled"}
                       </span>
 
                       <span className="text-xs text-slate-400">

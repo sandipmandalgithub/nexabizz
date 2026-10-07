@@ -8,7 +8,6 @@ import {
   Mail,
   MessageSquare,
   PhoneCall,
-  Plus,
   TrendingUp,
   XCircle,
 } from "lucide-react";
@@ -235,7 +234,10 @@ export default async function AdminDashboardPage() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <Link
+              href="/admin/enquiries?status=NEW"
+              className="group block rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
+            >
               <div className="flex items-center justify-between">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
                   <CircleDot className="h-5 w-5 text-blue-600" />
@@ -253,9 +255,16 @@ export default async function AdminDashboardPage() {
               <p className="mt-1 text-3xl font-bold text-slate-950">
                 {newEnquiries}
               </p>
-            </div>
 
-            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+              <p className="mt-3 text-xs font-medium text-blue-600 opacity-0 transition-opacity group-hover:opacity-100">
+                View new enquiries →
+              </p>
+            </Link>
+
+            <Link
+              href="/admin/enquiries?status=CONTACTED"
+              className="group block rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-md"
+            >
               <div className="flex items-center justify-between">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50">
                   <PhoneCall className="h-5 w-5 text-amber-600" />
@@ -273,9 +282,16 @@ export default async function AdminDashboardPage() {
               <p className="mt-1 text-3xl font-bold text-slate-950">
                 {contactedEnquiries}
               </p>
-            </div>
 
-            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+              <p className="mt-3 text-xs font-medium text-amber-600 opacity-0 transition-opacity group-hover:opacity-100">
+                View contacted enquiries →
+              </p>
+            </Link>
+
+            <Link
+              href="/admin/enquiries?status=IN_PROGRESS"
+              className="group block rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-md"
+            >
               <div className="flex items-center justify-between">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-50">
                   <Clock3 className="h-5 w-5 text-violet-600" />
@@ -293,9 +309,16 @@ export default async function AdminDashboardPage() {
               <p className="mt-1 text-3xl font-bold text-slate-950">
                 {inProgressEnquiries}
               </p>
-            </div>
 
-            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+              <p className="mt-3 text-xs font-medium text-violet-600 opacity-0 transition-opacity group-hover:opacity-100">
+                View active enquiries →
+              </p>
+            </Link>
+
+            <Link
+              href="/admin/enquiries?status=COMPLETED"
+              className="group block rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md"
+            >
               <div className="flex items-center justify-between">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
                   <CheckCircle2 className="h-5 w-5 text-emerald-600" />
@@ -313,9 +336,16 @@ export default async function AdminDashboardPage() {
               <p className="mt-1 text-3xl font-bold text-slate-950">
                 {completedEnquiries}
               </p>
-            </div>
 
-            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+              <p className="mt-3 text-xs font-medium text-emerald-600 opacity-0 transition-opacity group-hover:opacity-100">
+                View completed enquiries →
+              </p>
+            </Link>
+
+            <Link
+              href="/admin/enquiries?status=CANCELLED"
+              className="group block rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-red-200 hover:shadow-md"
+            >
               <div className="flex items-center justify-between">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-50">
                   <XCircle className="h-5 w-5 text-red-600" />
@@ -333,7 +363,11 @@ export default async function AdminDashboardPage() {
               <p className="mt-1 text-3xl font-bold text-slate-950">
                 {cancelledEnquiries}
               </p>
-            </div>
+
+              <p className="mt-3 text-xs font-medium text-red-600 opacity-0 transition-opacity group-hover:opacity-100">
+                View cancelled enquiries →
+              </p>
+            </Link>
           </div>
         </section>
 
@@ -375,7 +409,7 @@ export default async function AdminDashboardPage() {
             </Link>
 
             <Link
-              href="/admin/enquiries"
+              href="/admin/enquiries?status=NEW"
               className="group rounded-xl border border-blue-100 bg-blue-50/50 p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50 hover:shadow-md"
             >
               <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-blue-600 text-white">
@@ -400,7 +434,7 @@ export default async function AdminDashboardPage() {
             </Link>
 
             <Link
-              href="/admin/enquiries"
+              href="/admin/enquiries?status=IN_PROGRESS"
               className="group rounded-xl border border-violet-100 bg-violet-50/50 p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-violet-200 hover:bg-violet-50 hover:shadow-md"
             >
               <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-violet-600 text-white">
@@ -425,7 +459,7 @@ export default async function AdminDashboardPage() {
             </Link>
 
             <Link
-              href="/admin/enquiries"
+              href="/admin/enquiries?status=COMPLETED"
               className="group rounded-xl border border-emerald-100 bg-emerald-50/50 p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 hover:shadow-md"
             >
               <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-emerald-600 text-white">

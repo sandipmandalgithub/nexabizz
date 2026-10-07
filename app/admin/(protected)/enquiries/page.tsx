@@ -61,10 +61,32 @@ const statusOptions: {
   },
 ];
 
+function getInitialStatus(): EnquiryStatus | "all" {
+  if (typeof window === "undefined") {
+    return "all";
+  }
+
+  const status = new URLSearchParams(
+    window.location.search,
+  ).get("status");
+
+  if (
+    status &&
+    statusOptions.some(
+      (option) => option.value === status,
+    )
+  ) {
+    return status as EnquiryStatus;
+  }
+
+  return "all";
+}
+
 function getStatusLabel(status: EnquiryStatus) {
   return (
-    statusOptions.find((option) => option.value === status)
-      ?.label ?? status
+    statusOptions.find(
+      (option) => option.value === status,
+    )?.label ?? status
   );
 }
 
@@ -106,8 +128,11 @@ export default function AdminEnquiriesPage() {
   const [error, setError] = useState("");
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedService, setSelectedService] = useState("all");
-  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedService, setSelectedService] =
+    useState("all");
+  const [selectedStatus, setSelectedStatus] = useState<
+    EnquiryStatus | "all"
+  >(getInitialStatus);
 
   const [selectedEnquiry, setSelectedEnquiry] =
     useState<Enquiry | null>(null);
@@ -160,6 +185,23 @@ export default function AdminEnquiriesPage() {
 
     fetchEnquiries();
   }, [router]);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+
+    if (selectedStatus === "all") {
+      url.searchParams.delete("status");
+    } else {
+      url.searchParams.set("status", selectedStatus);
+    }
+
+    router.replace(
+      `${url.pathname}${url.search}`,
+      {
+        scroll: false,
+      },
+    );
+  }, [selectedStatus, router]);
 
   const serviceOptions = useMemo(() => {
     const services = enquiries
@@ -433,7 +475,9 @@ export default function AdminEnquiriesPage() {
                     value={selectedStatus}
                     onChange={(event) =>
                       setSelectedStatus(
-                        event.target.value,
+                        event.target.value as
+                          | EnquiryStatus
+                          | "all",
                       )
                     }
                     className="h-10 w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 pr-9 text-sm text-slate-700 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"

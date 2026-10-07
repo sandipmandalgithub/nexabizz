@@ -8,6 +8,7 @@ import {
   Mail,
   MessageSquare,
   PhoneCall,
+  Plus,
   TrendingUp,
   XCircle,
 } from "lucide-react";
@@ -333,6 +334,120 @@ export default async function AdminDashboardPage() {
                 {cancelledEnquiries}
               </p>
             </div>
+          </div>
+        </section>
+
+        <section className="mt-8">
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold text-slate-950">
+              Quick Actions
+            </h2>
+
+            <p className="mt-1 text-sm text-slate-500">
+              Quickly access the most important admin tasks.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Link
+              href="/admin/enquiries"
+              className="group rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+            >
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-slate-950 text-white">
+                <Mail className="h-5 w-5" />
+              </div>
+
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-950">
+                    All Enquiries
+                  </h3>
+
+                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                    View and manage all website enquiries.
+                  </p>
+                </div>
+
+                <span className="text-lg text-slate-300 transition-colors group-hover:text-slate-700">
+                  →
+                </span>
+              </div>
+            </Link>
+
+            <Link
+              href="/admin/enquiries"
+              className="group rounded-xl border border-blue-100 bg-blue-50/50 p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50 hover:shadow-md"
+            >
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-blue-600 text-white">
+                <CircleDot className="h-5 w-5" />
+              </div>
+
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-950">
+                    New Enquiries
+                  </h3>
+
+                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                    Review newly received enquiries.
+                  </p>
+                </div>
+
+                <span className="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-bold text-blue-700">
+                  {newEnquiries}
+                </span>
+              </div>
+            </Link>
+
+            <Link
+              href="/admin/enquiries"
+              className="group rounded-xl border border-violet-100 bg-violet-50/50 p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-violet-200 hover:bg-violet-50 hover:shadow-md"
+            >
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-violet-600 text-white">
+                <Clock3 className="h-5 w-5" />
+              </div>
+
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-950">
+                    In Progress
+                  </h3>
+
+                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                    Continue working on active enquiries.
+                  </p>
+                </div>
+
+                <span className="rounded-full bg-violet-100 px-2.5 py-1 text-xs font-bold text-violet-700">
+                  {inProgressEnquiries}
+                </span>
+              </div>
+            </Link>
+
+            <Link
+              href="/admin/enquiries"
+              className="group rounded-xl border border-emerald-100 bg-emerald-50/50 p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 hover:shadow-md"
+            >
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-emerald-600 text-white">
+                <CheckCircle2 className="h-5 w-5" />
+              </div>
+
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-950">
+                    Completed
+                  </h3>
+
+                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                    Review completed enquiries.
+                  </p>
+                </div>
+
+                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-700">
+                  {completedEnquiries}
+                </span>
+              </div>
+            </Link>
           </div>
         </section>
 

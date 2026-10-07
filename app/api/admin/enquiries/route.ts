@@ -2,6 +2,16 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
+const ENQUIRY_STATUSES = [
+  "NEW",
+  "CONTACTED",
+  "IN_PROGRESS",
+  "COMPLETED",
+  "CANCELLED",
+] as const;
+
+type EnquiryStatus = (typeof ENQUIRY_STATUSES)[number];
+
 async function verifyAdmin() {
   const session = await auth();
 
@@ -59,6 +69,118 @@ export async function GET() {
       {
         success: false,
         message: "Failed to fetch enquiries.",
+      },
+      {
+        status: 500,
+      },
+    );
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const admin = await verifyAdmin();
+
+    if (!admin) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Unauthorized.",
+        },
+        {
+          status: 401,
+        },
+      );
+    }
+
+    const body = await request.json();
+
+    const enquiryId =
+      typeof body?.id === "string"
+        ? body.id.trim()
+        : "";
+
+    const status =
+      typeof body?.status === "string"
+        ? body.status.trim().toUpperCase()
+        : "";
+
+    if (!enquiryId) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Enquiry ID is required.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    if (
+      !ENQUIRY_STATUSES.includes(
+        status as EnquiryStatus,
+      )
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid enquiry status.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    const enquiry = await prisma.contactEnquiry.findUnique({
+      where: {
+        id: enquiryId,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!enquiry) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Enquiry not found.",
+        },
+        {
+          status: 404,
+        },
+      );
+    }
+
+    const updatedEnquiry =
+      await prisma.contactEnquiry.update({
+        where: {
+          id: enquiryId,
+        },
+        data: {
+          status: status as EnquiryStatus,
+        },
+      });
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Enquiry status updated successfully.",
+        enquiry: updatedEnquiry,
+      },
+      {
+        status: 200,
+      },
+    );
+  } catch (error) {
+    console.error("Failed to update enquiry status:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Failed to update enquiry status.",
       },
       {
         status: 500,

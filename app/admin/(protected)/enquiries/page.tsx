@@ -14,6 +14,13 @@ import {
   X,
 } from "lucide-react";
 
+type EnquiryStatus =
+  | "NEW"
+  | "CONTACTED"
+  | "IN_PROGRESS"
+  | "COMPLETED"
+  | "CANCELLED";
+
 type Enquiry = {
   id: string;
   fullName: string;
@@ -24,27 +31,104 @@ type Enquiry = {
   budget: string;
   timeline: string;
   projectDetails: string;
+  status: EnquiryStatus;
   createdAt: string;
 };
+
+const statusOptions: {
+  value: EnquiryStatus;
+  label: string;
+}[] = [
+  {
+    value: "NEW",
+    label: "New",
+  },
+  {
+    value: "CONTACTED",
+    label: "Contacted",
+  },
+  {
+    value: "IN_PROGRESS",
+    label: "In Progress",
+  },
+  {
+    value: "COMPLETED",
+    label: "Completed",
+  },
+  {
+    value: "CANCELLED",
+    label: "Cancelled",
+  },
+];
+
+function getStatusLabel(status: EnquiryStatus) {
+  return (
+    statusOptions.find((option) => option.value === status)
+      ?.label ?? status
+  );
+}
+
+function getStatusClasses(status: EnquiryStatus) {
+  switch (status) {
+    case "NEW":
+      return "bg-blue-50 text-blue-700 ring-blue-600/20";
+
+    case "CONTACTED":
+      return "bg-amber-50 text-amber-700 ring-amber-600/20";
+
+    case "IN_PROGRESS":
+      return "bg-violet-50 text-violet-700 ring-violet-600/20";
+
+    case "COMPLETED":
+      return "bg-emerald-50 text-emerald-700 ring-emerald-600/20";
+
+    case "CANCELLED":
+      return "bg-red-50 text-red-700 ring-red-600/20";
+
+    default:
+      return "bg-slate-50 text-slate-700 ring-slate-600/20";
+  }
+}
+
+function formatDate(dateString: string) {
+  return new Date(dateString).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
 
 export default function AdminEnquiriesPage() {
   const router = useRouter();
 
   const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedService, setSelectedService] = useState("All Services");
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedService, setSelectedService] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
+
   const [selectedEnquiry, setSelectedEnquiry] =
     useState<Enquiry | null>(null);
+
   const [deletingId, setDeletingId] = useState<string | null>(
     null,
   );
 
+  const [updatingStatusId, setUpdatingStatusId] = useState<
+    string | null
+  >(null);
+
   useEffect(() => {
     async function fetchEnquiries() {
       try {
-        const response = await fetch("/api/admin/enquiries");
+        setLoading(true);
+        setError("");
+
+        const response = await fetch(
+          "/api/admin/enquiries",
+        );
 
         if (response.status === 401) {
           router.push("/admin/login");
@@ -53,20 +137,24 @@ export default function AdminEnquiriesPage() {
 
         const data = await response.json();
 
-        if (!response.ok || !data.success) {
-          setErrorMessage(
-            data.message || "Failed to load enquiries.",
+        if (!response.ok) {
+          throw new Error(
+            data?.message ||
+              "Failed to fetch enquiries.",
           );
-          return;
         }
 
-        setEnquiries(data.enquiries || []);
-      } catch {
-        setErrorMessage(
-          "Unable to load enquiries. Please try again.",
+        setEnquiries(data.enquiries ?? []);
+      } catch (err) {
+        console.error(err);
+
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to fetch enquiries.",
         );
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     }
 
@@ -74,67 +162,77 @@ export default function AdminEnquiriesPage() {
   }, [router]);
 
   const serviceOptions = useMemo(() => {
-    const services = Array.from(
-      new Set(
-        enquiries
-          .map((enquiry) => enquiry.service.trim())
-          .filter(Boolean),
-      ),
-    );
+    const services = enquiries
+      .map((enquiry) => enquiry.service)
+      .filter(Boolean);
 
-    return services.sort((a, b) => a.localeCompare(b));
+    return Array.from(new Set(services)).sort();
   }, [enquiries]);
 
-  const filteredEnquiries = enquiries.filter((enquiry) => {
-    const searchValue = searchTerm.toLowerCase().trim();
+  const filteredEnquiries = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
 
-    const matchesSearch =
-      !searchValue ||
-      enquiry.fullName.toLowerCase().includes(searchValue) ||
-      (enquiry.company || "")
-        .toLowerCase()
-        .includes(searchValue) ||
-      enquiry.email.toLowerCase().includes(searchValue) ||
-      enquiry.phone.toLowerCase().includes(searchValue) ||
-      enquiry.service.toLowerCase().includes(searchValue);
+    return enquiries.filter((enquiry) => {
+      const matchesSearch =
+        !query ||
+        enquiry.fullName
+          .toLowerCase()
+          .includes(query) ||
+        (enquiry.company ?? "")
+          .toLowerCase()
+          .includes(query) ||
+        enquiry.email
+          .toLowerCase()
+          .includes(query) ||
+        enquiry.phone
+          .toLowerCase()
+          .includes(query) ||
+        enquiry.service
+          .toLowerCase()
+          .includes(query);
 
-    const matchesService =
-      selectedService === "All Services" ||
-      enquiry.service === selectedService;
+      const matchesService =
+        selectedService === "all" ||
+        enquiry.service === selectedService;
 
-    return matchesSearch && matchesService;
-  });
+      const matchesStatus =
+        selectedStatus === "all" ||
+        enquiry.status === selectedStatus;
 
-  const hasActiveFilters =
-    searchTerm.trim() !== "" ||
-    selectedService !== "All Services";
+      return (
+        matchesSearch &&
+        matchesService &&
+        matchesStatus
+      );
+    });
+  }, [
+    enquiries,
+    searchQuery,
+    selectedService,
+    selectedStatus,
+  ]);
 
-  function clearFilters() {
-    setSearchTerm("");
-    setSelectedService("All Services");
-  }
-
-  async function handleDelete(id: string) {
-    const shouldDelete = window.confirm(
-      "Are you sure you want to delete this enquiry?",
-    );
-
-    if (!shouldDelete) {
-      return;
-    }
-
-    setDeletingId(id);
-
+  async function handleStatusChange(
+    enquiryId: string,
+    status: EnquiryStatus,
+  ) {
     try {
-      const response = await fetch("/api/admin/enquiries", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
+      setUpdatingStatusId(enquiryId);
+      setError("");
+
+      const response = await fetch(
+        "/api/admin/enquiries",
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: enquiryId,
+            status,
+          }),
         },
-        body: JSON.stringify({
-          id,
-        }),
-      });
+      );
 
       if (response.status === 401) {
         router.push("/admin/login");
@@ -143,489 +241,790 @@ export default function AdminEnquiriesPage() {
 
       const data = await response.json();
 
-      if (!response.ok || !data.success) {
-        setErrorMessage(
-          data.message || "Failed to delete enquiry.",
+      if (!response.ok) {
+        throw new Error(
+          data?.message ||
+            "Failed to update enquiry status.",
         );
+      }
+
+      setEnquiries((currentEnquiries) =>
+        currentEnquiries.map((enquiry) =>
+          enquiry.id === enquiryId
+            ? {
+                ...enquiry,
+                status,
+              }
+            : enquiry,
+        ),
+      );
+
+      setSelectedEnquiry((currentEnquiry) =>
+        currentEnquiry?.id === enquiryId
+          ? {
+              ...currentEnquiry,
+              status,
+            }
+          : currentEnquiry,
+      );
+    } catch (err) {
+      console.error(err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to update enquiry status.",
+      );
+    } finally {
+      setUpdatingStatusId(null);
+    }
+  }
+
+  async function handleDelete(enquiryId: string) {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this enquiry?",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setDeletingId(enquiryId);
+      setError("");
+
+      const response = await fetch(
+        "/api/admin/enquiries",
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: enquiryId,
+          }),
+        },
+      );
+
+      if (response.status === 401) {
+        router.push("/admin/login");
         return;
       }
 
-      setEnquiries((previous) =>
-        previous.filter((enquiry) => enquiry.id !== id),
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message ||
+            "Failed to delete enquiry.",
+        );
+      }
+
+      setEnquiries((currentEnquiries) =>
+        currentEnquiries.filter(
+          (enquiry) => enquiry.id !== enquiryId,
+        ),
       );
 
-      if (selectedEnquiry?.id === id) {
-        setSelectedEnquiry(null);
-      }
-    } catch {
-      setErrorMessage(
-        "Unable to delete enquiry. Please try again.",
+      setSelectedEnquiry((currentEnquiry) =>
+        currentEnquiry?.id === enquiryId
+          ? null
+          : currentEnquiry,
+      );
+    } catch (err) {
+      console.error(err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to delete enquiry.",
       );
     } finally {
       setDeletingId(null);
     }
   }
 
-  function formatDate(dateString: string) {
-    return new Intl.DateTimeFormat("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date(dateString));
+  function clearFilters() {
+    setSearchQuery("");
+    setSelectedService("all");
+    setSelectedStatus("all");
   }
 
+  const hasActiveFilters =
+    searchQuery.trim() !== "" ||
+    selectedService !== "all" ||
+    selectedStatus !== "all";
+
   return (
-    <main className="min-h-screen bg-slate-50 lg:ml-64">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
-            Admin Panel
-          </p>
-
-          <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight text-slate-950">
-                Enquiries
-              </h1>
-
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                View and manage enquiries submitted through the
-                NexaBizz contact form.
-              </p>
-            </div>
-
-            <div className="text-sm text-slate-500">
-              {filteredEnquiries.length}{" "}
-              {filteredEnquiries.length === 1
-                ? "enquiry"
-                : "enquiries"}
-            </div>
-          </div>
-        </div>
-
-        <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
-            <div className="flex-1">
-              <label
-                htmlFor="enquiry-search"
-                className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500"
-              >
-                Search
-              </label>
-
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-
-                <input
-                  id="enquiry-search"
-                  type="search"
-                  value={searchTerm}
-                  onChange={(event) =>
-                    setSearchTerm(event.target.value)
-                  }
-                  placeholder="Search name, email, company, phone..."
-                  className="h-11 w-full rounded-lg border border-slate-200 bg-white pl-10 pr-4 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
-                />
-              </div>
-            </div>
-
-            <div className="w-full lg:w-64">
-              <label
-                htmlFor="service-filter"
-                className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500"
-              >
-                Service
-              </label>
-
-              <div className="relative">
-                <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-
-                <select
-                  id="service-filter"
-                  value={selectedService}
-                  onChange={(event) =>
-                    setSelectedService(event.target.value)
-                  }
-                  className="h-11 w-full appearance-none rounded-lg border border-slate-200 bg-white pl-10 pr-10 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
-                >
-                  <option>All Services</option>
-
-                  {serviceOptions.map((service) => (
-                    <option key={service} value={service}>
-                      {service}
-                    </option>
-                  ))}
-                </select>
-
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              </div>
-            </div>
-
-            {hasActiveFilters && (
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-950"
-              >
-                <X className="h-4 w-4" />
-                Clear Filters
-              </button>
-            )}
-          </div>
-
-          {hasActiveFilters && (
-            <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
-              <span className="text-xs font-medium text-slate-500">
-                Active filters:
-              </span>
-
-              {searchTerm.trim() && (
-                <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
-                  Search: {searchTerm.trim()}
-                </span>
-              )}
-
-              {selectedService !== "All Services" && (
-                <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
-                  Service: {selectedService}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-
-        {errorMessage && (
-          <div
-            role="alert"
-            className="mb-6 flex items-center justify-between gap-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-          >
-            <span>{errorMessage}</span>
-
-            <button
-              type="button"
-              onClick={() => setErrorMessage("")}
-              className="shrink-0 rounded p-1 transition-colors hover:bg-red-100"
-              aria-label="Dismiss error"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        )}
-
-        {isLoading ? (
-          <div className="flex min-h-80 items-center justify-center rounded-xl border border-slate-200 bg-white">
-            <div className="flex items-center gap-3 text-sm text-slate-500">
-              <Loader2 className="h-5 w-5 animate-spin" />
-              Loading enquiries...
-            </div>
-          </div>
-        ) : filteredEnquiries.length === 0 ? (
-          <div className="flex min-h-80 flex-col items-center justify-center rounded-xl border border-slate-200 bg-white px-6 text-center">
-            <Mail className="h-10 w-10 text-slate-300" />
-
-            <h2 className="mt-4 text-lg font-semibold text-slate-900">
-              {hasActiveFilters
-                ? "No matching enquiries"
-                : "No enquiries yet"}
-            </h2>
-
-            <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
-              {hasActiveFilters
-                ? "Try changing your search or service filter."
-                : "New enquiries submitted through the contact form will appear here."}
+    <div className="min-h-screen bg-slate-50 lg:ml-64">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <div className="mb-6">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Admin Panel
             </p>
 
-            {hasActiveFilters && (
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="mt-5 rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
-              >
-                Clear Filters
-              </button>
-            )}
+            <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+              Enquiries
+            </h1>
+
+            <p className="mt-2 text-sm text-slate-500">
+              Manage and track enquiries received from
+              your website.
+            </p>
           </div>
-        ) : (
-          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[900px]">
-                <thead className="border-b border-slate-200 bg-slate-50">
-                  <tr>
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Name
-                    </th>
+        </div>
 
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Contact
-                    </th>
-
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Service
-                    </th>
-
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Date
-                    </th>
-
-                    <th className="px-5 py-4 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody className="divide-y divide-slate-100">
-                  {filteredEnquiries.map((enquiry) => (
-                    <tr
-                      key={enquiry.id}
-                      className="transition-colors hover:bg-slate-50"
-                    >
-                      <td className="px-5 py-4">
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">
-                            {enquiry.fullName}
-                          </p>
-
-                          {enquiry.company && (
-                            <p className="mt-1 text-xs text-slate-500">
-                              {enquiry.company}
-                            </p>
-                          )}
-                        </div>
-                      </td>
-
-                      <td className="px-5 py-4">
-                        <div className="space-y-1">
-                          <a
-                            href={`mailto:${enquiry.email}`}
-                            className="block text-sm text-slate-700 transition-colors hover:text-slate-950"
-                          >
-                            {enquiry.email}
-                          </a>
-
-                          <a
-                            href={`tel:${enquiry.phone}`}
-                            className="block text-xs text-slate-500 transition-colors hover:text-slate-900"
-                          >
-                            {enquiry.phone}
-                          </a>
-                        </div>
-                      </td>
-
-                      <td className="px-5 py-4">
-                        <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
-                          {enquiry.service}
-                        </span>
-                      </td>
-
-                      <td className="px-5 py-4 text-sm text-slate-500">
-                        {formatDate(enquiry.createdAt)}
-                      </td>
-
-                      <td className="px-5 py-4">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setSelectedEnquiry(enquiry)
-                            }
-                            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-950"
-                          >
-                            <Eye className="h-4 w-4" />
-                            View Details
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleDelete(enquiry.id)
-                            }
-                            disabled={
-                              deletingId === enquiry.id
-                            }
-                            className="inline-flex items-center justify-center rounded-lg border border-red-200 bg-white p-2 text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                            aria-label={`Delete enquiry from ${enquiry.fullName}`}
-                          >
-                            {deletingId === enquiry.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-4 w-4" />
-                            )}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+        {error && (
+          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+            {error}
           </div>
         )}
+
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-200 p-4 sm:p-5">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+                <div className="relative flex-1">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(event) =>
+                      setSearchQuery(event.target.value)
+                    }
+                    placeholder="Search by name, company, email, phone or service..."
+                    className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                  />
+                </div>
+
+                <div className="relative w-full lg:w-56">
+                  <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+                  <select
+                    value={selectedService}
+                    onChange={(event) =>
+                      setSelectedService(
+                        event.target.value,
+                      )
+                    }
+                    className="h-10 w-full appearance-none rounded-lg border border-slate-200 bg-white pl-9 pr-9 text-sm text-slate-700 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                  >
+                    <option value="all">
+                      All Services
+                    </option>
+
+                    {serviceOptions.map((service) => (
+                      <option
+                        key={service}
+                        value={service}
+                      >
+                        {service}
+                      </option>
+                    ))}
+                  </select>
+
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                </div>
+
+                <div className="relative w-full lg:w-48">
+                  <select
+                    value={selectedStatus}
+                    onChange={(event) =>
+                      setSelectedStatus(
+                        event.target.value,
+                      )
+                    }
+                    className="h-10 w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 pr-9 text-sm text-slate-700 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                  >
+                    <option value="all">
+                      All Statuses
+                    </option>
+
+                    {statusOptions.map((status) => (
+                      <option
+                        key={status.value}
+                        value={status.value}
+                      >
+                        {status.label}
+                      </option>
+                    ))}
+                  </select>
+
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                </div>
+
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950"
+                  >
+                    <X className="h-4 w-4" />
+                    Clear
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between gap-4">
+                <p className="text-sm text-slate-500">
+                  Showing{" "}
+                  <span className="font-semibold text-slate-900">
+                    {filteredEnquiries.length}
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-semibold text-slate-900">
+                    {enquiries.length}
+                  </span>{" "}
+                  enquiries
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="flex min-h-64 items-center justify-center">
+              <div className="flex items-center gap-3 text-sm font-medium text-slate-500">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Loading enquiries...
+              </div>
+            </div>
+          ) : filteredEnquiries.length === 0 ? (
+            <div className="flex min-h-64 flex-col items-center justify-center px-6 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+                <Mail className="h-5 w-5 text-slate-400" />
+              </div>
+
+              <h2 className="mt-4 text-base font-semibold text-slate-900">
+                No enquiries found
+              </h2>
+
+              <p className="mt-1 max-w-md text-sm text-slate-500">
+                Try changing your search or filter
+                criteria.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="hidden overflow-x-auto lg:block">
+                <table className="w-full min-w-[1050px]">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50/70">
+                      <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                        Enquiry
+                      </th>
+
+                      <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                        Service
+                      </th>
+
+                      <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                        Budget
+                      </th>
+
+                      <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                        Status
+                      </th>
+
+                      <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                        Date
+                      </th>
+
+                      <th className="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {filteredEnquiries.map((enquiry) => (
+                      <tr
+                        key={enquiry.id}
+                        className="border-b border-slate-100 last:border-b-0"
+                      >
+                        <td className="px-5 py-4">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-slate-900">
+                              {enquiry.fullName}
+                            </p>
+
+                            {enquiry.company && (
+                              <p className="mt-0.5 truncate text-xs text-slate-500">
+                                {enquiry.company}
+                              </p>
+                            )}
+
+                            <p className="mt-1 truncate text-xs text-slate-400">
+                              {enquiry.email}
+                            </p>
+                          </div>
+                        </td>
+
+                        <td className="px-5 py-4">
+                          <p className="max-w-44 text-sm font-medium text-slate-700">
+                            {enquiry.service}
+                          </p>
+                        </td>
+
+                        <td className="px-5 py-4">
+                          <p className="text-sm text-slate-600">
+                            {enquiry.budget}
+                          </p>
+                        </td>
+
+                        <td className="px-5 py-4">
+                          <div className="relative inline-flex">
+                            <select
+                              value={enquiry.status}
+                              disabled={
+                                updatingStatusId ===
+                                enquiry.id
+                              }
+                              onChange={(event) =>
+                                handleStatusChange(
+                                  enquiry.id,
+                                  event.target
+                                    .value as EnquiryStatus,
+                                )
+                              }
+                              className={`h-8 appearance-none rounded-full py-0 pl-3 pr-8 text-xs font-semibold ring-1 outline-none transition disabled:cursor-not-allowed disabled:opacity-60 ${getStatusClasses(
+                                enquiry.status,
+                              )}`}
+                              aria-label={`Change status for ${enquiry.fullName}`}
+                            >
+                              {statusOptions.map(
+                                (status) => (
+                                  <option
+                                    key={status.value}
+                                    value={
+                                      status.value
+                                    }
+                                  >
+                                    {status.label}
+                                  </option>
+                                ),
+                              )}
+                            </select>
+
+                            {updatingStatusId ===
+                            enquiry.id ? (
+                              <Loader2 className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 animate-spin" />
+                            ) : (
+                              <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2" />
+                            )}
+                          </div>
+                        </td>
+
+                        <td className="px-5 py-4">
+                          <p className="whitespace-nowrap text-sm text-slate-500">
+                            {formatDate(
+                              enquiry.createdAt,
+                            )}
+                          </p>
+                        </td>
+
+                        <td className="px-5 py-4">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSelectedEnquiry(
+                                  enquiry,
+                                )
+                              }
+                              className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950"
+                            >
+                              <Eye className="h-4 w-4" />
+                              View
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleDelete(
+                                  enquiry.id,
+                                )
+                              }
+                              disabled={
+                                deletingId ===
+                                enquiry.id
+                              }
+                              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-100 bg-red-50 text-red-600 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                              aria-label={`Delete enquiry from ${enquiry.fullName}`}
+                            >
+                              {deletingId ===
+                              enquiry.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="divide-y divide-slate-100 lg:hidden">
+                {filteredEnquiries.map((enquiry) => (
+                  <div
+                    key={enquiry.id}
+                    className="p-4 sm:p-5"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-slate-900">
+                          {enquiry.fullName}
+                        </p>
+
+                        {enquiry.company && (
+                          <p className="mt-0.5 truncate text-xs text-slate-500">
+                            {enquiry.company}
+                          </p>
+                        )}
+
+                        <p className="mt-1 truncate text-xs text-slate-400">
+                          {enquiry.email}
+                        </p>
+                      </div>
+
+                      <div className="relative inline-flex shrink-0">
+                        <select
+                          value={enquiry.status}
+                          disabled={
+                            updatingStatusId ===
+                            enquiry.id
+                          }
+                          onChange={(event) =>
+                            handleStatusChange(
+                              enquiry.id,
+                              event.target
+                                .value as EnquiryStatus,
+                            )
+                          }
+                          className={`h-8 appearance-none rounded-full py-0 pl-3 pr-8 text-xs font-semibold ring-1 outline-none transition disabled:cursor-not-allowed disabled:opacity-60 ${getStatusClasses(
+                            enquiry.status,
+                          )}`}
+                          aria-label={`Change status for ${enquiry.fullName}`}
+                        >
+                          {statusOptions.map(
+                            (status) => (
+                              <option
+                                key={status.value}
+                                value={status.value}
+                              >
+                                {status.label}
+                              </option>
+                            ),
+                          )}
+                        </select>
+
+                        {updatingStatusId ===
+                        enquiry.id ? (
+                          <Loader2 className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 animate-spin" />
+                        ) : (
+                          <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2" />
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                      <div className="rounded-lg bg-slate-50 p-3">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+                          Service
+                        </p>
+                        <p className="mt-1 text-sm font-medium text-slate-700">
+                          {enquiry.service}
+                        </p>
+                      </div>
+
+                      <div className="rounded-lg bg-slate-50 p-3">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+                          Budget
+                        </p>
+                        <p className="mt-1 text-sm font-medium text-slate-700">
+                          {enquiry.budget}
+                        </p>
+                      </div>
+
+                      <div className="rounded-lg bg-slate-50 p-3">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+                          Timeline
+                        </p>
+                        <p className="mt-1 text-sm font-medium text-slate-700">
+                          {enquiry.timeline}
+                        </p>
+                      </div>
+
+                      <div className="rounded-lg bg-slate-50 p-3">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+                          Date
+                        </p>
+                        <p className="mt-1 text-sm font-medium text-slate-700">
+                          {formatDate(
+                            enquiry.createdAt,
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex items-center gap-2">
+                      <a
+                        href={`tel:${enquiry.phone}`}
+                        className="inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950"
+                      >
+                        <Phone className="h-4 w-4" />
+                        Call
+                      </a>
+
+                      <a
+                        href={`mailto:${enquiry.email}`}
+                        className="inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950"
+                      >
+                        <Mail className="h-4 w-4" />
+                        Email
+                      </a>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedEnquiry(
+                            enquiry,
+                          )
+                        }
+                        className="inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-lg bg-slate-950 px-3 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+                      >
+                        <Eye className="h-4 w-4" />
+                        View
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleDelete(enquiry.id)
+                        }
+                        disabled={
+                          deletingId === enquiry.id
+                        }
+                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-red-100 bg-red-50 text-red-600 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                        aria-label={`Delete enquiry from ${enquiry.fullName}`}
+                      >
+                        {deletingId === enquiry.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {selectedEnquiry && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/50 p-4"
-          onClick={() => setSelectedEnquiry(null)}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/50 p-4"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setSelectedEnquiry(null);
+            }
+          }}
         >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="enquiry-details-title"
-            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
+            <div className="sticky top-0 flex items-center justify-between border-b border-slate-200 bg-white px-5 py-4 sm:px-6">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
                   Enquiry Details
                 </p>
 
-                <h2
-                  id="enquiry-details-title"
-                  className="mt-1 text-xl font-bold text-slate-950"
-                >
+                <h2 className="mt-1 text-lg font-bold text-slate-950">
                   {selectedEnquiry.fullName}
                 </h2>
               </div>
 
               <button
                 type="button"
-                onClick={() => setSelectedEnquiry(null)}
-                className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-950"
+                onClick={() =>
+                  setSelectedEnquiry(null)
+                }
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-950"
                 aria-label="Close enquiry details"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="space-y-6 px-6 py-6">
-              <div className="grid gap-5 sm:grid-cols-2">
+            <div className="space-y-6 p-5 sm:p-6">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="relative inline-flex">
+                  <select
+                    value={selectedEnquiry.status}
+                    disabled={
+                      updatingStatusId ===
+                      selectedEnquiry.id
+                    }
+                    onChange={(event) =>
+                      handleStatusChange(
+                        selectedEnquiry.id,
+                        event.target
+                          .value as EnquiryStatus,
+                      )
+                    }
+                    className={`h-9 appearance-none rounded-full py-0 pl-3 pr-9 text-xs font-semibold ring-1 outline-none transition disabled:cursor-not-allowed disabled:opacity-60 ${getStatusClasses(
+                      selectedEnquiry.status,
+                    )}`}
+                    aria-label="Change enquiry status"
+                  >
+                    {statusOptions.map((status) => (
+                      <option
+                        key={status.value}
+                        value={status.value}
+                      >
+                        {status.label}
+                      </option>
+                    ))}
+                  </select>
+
+                  {updatingStatusId ===
+                  selectedEnquiry.id ? (
+                    <Loader2 className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 animate-spin" />
+                  ) : (
+                    <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2" />
+                  )}
+                </div>
+
+                <span className="text-xs text-slate-400">
+                  {getStatusLabel(
+                    selectedEnquiry.status,
+                  )}
+                </span>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
                     Full Name
                   </p>
-
                   <p className="mt-1 text-sm font-medium text-slate-900">
                     {selectedEnquiry.fullName}
                   </p>
                 </div>
 
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
                     Company
                   </p>
-
                   <p className="mt-1 text-sm font-medium text-slate-900">
-                    {selectedEnquiry.company || "Not provided"}
+                    {selectedEnquiry.company ||
+                      "Not provided"}
                   </p>
                 </div>
 
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
                     Email
                   </p>
-
                   <a
                     href={`mailto:${selectedEnquiry.email}`}
-                    className="mt-1 inline-flex items-center gap-2 text-sm font-medium text-slate-900 hover:underline"
+                    className="mt-1 block break-all text-sm font-medium text-slate-900 hover:underline"
                   >
-                    <Mail className="h-4 w-4" />
                     {selectedEnquiry.email}
                   </a>
                 </div>
 
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
                     Phone
                   </p>
-
                   <a
                     href={`tel:${selectedEnquiry.phone}`}
-                    className="mt-1 inline-flex items-center gap-2 text-sm font-medium text-slate-900 hover:underline"
+                    className="mt-1 block text-sm font-medium text-slate-900 hover:underline"
                   >
-                    <Phone className="h-4 w-4" />
                     {selectedEnquiry.phone}
                   </a>
                 </div>
 
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
                     Service
                   </p>
-
                   <p className="mt-1 text-sm font-medium text-slate-900">
                     {selectedEnquiry.service}
                   </p>
                 </div>
 
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
                     Budget
                   </p>
-
                   <p className="mt-1 text-sm font-medium text-slate-900">
                     {selectedEnquiry.budget}
                   </p>
                 </div>
 
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
                     Timeline
                   </p>
-
                   <p className="mt-1 text-sm font-medium text-slate-900">
                     {selectedEnquiry.timeline}
                   </p>
                 </div>
 
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
                     Submitted
                   </p>
-
                   <p className="mt-1 text-sm font-medium text-slate-900">
-                    {formatDate(selectedEnquiry.createdAt)}
+                    {formatDate(
+                      selectedEnquiry.createdAt,
+                    )}
                   </p>
                 </div>
               </div>
 
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
                   Project Details
                 </p>
 
-                <div className="mt-2 rounded-xl bg-slate-50 p-4">
-                  <p className="whitespace-pre-wrap text-sm leading-7 text-slate-700">
+                <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">
                     {selectedEnquiry.projectDetails}
                   </p>
                 </div>
               </div>
 
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  Enquiry ID
-                </p>
-
-                <p className="mt-1 break-all font-mono text-xs text-slate-500">
-                  {selectedEnquiry.id}
-                </p>
+              <div className="flex justify-end border-t border-slate-200 pt-5">
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleDelete(selectedEnquiry.id)
+                  }
+                  disabled={
+                    deletingId === selectedEnquiry.id
+                  }
+                  className="inline-flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-600 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {deletingId ===
+                  selectedEnquiry.id ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
+                  Delete Enquiry
+                </button>
               </div>
-            </div>
-
-            <div className="flex justify-end border-t border-slate-200 px-6 py-4">
-              <button
-                type="button"
-                onClick={() => setSelectedEnquiry(null)}
-                className="rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
-              >
-                Close
-              </button>
             </div>
           </div>
         </div>
       )}
-    </main>
+    </div>
   );
 }

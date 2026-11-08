@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   Code2,
   Database,
-  FileText,
   Gauge,
   Globe2,
   Handshake,
@@ -15,7 +14,6 @@ import {
   MessageSquare,
   Search,
   Settings2,
-  Smartphone,
   Users,
   Workflow,
 } from "lucide-react";
@@ -255,7 +253,8 @@ export default function ProfessionalServicesPage() {
             </p>
 
             <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
-              Professional services need digital clarity and efficient workflows.
+              Professional services need digital clarity and efficient
+              workflows.
             </h2>
 
             <p className="mt-5 text-base leading-7 text-slate-600">
@@ -379,6 +378,51 @@ export default function ProfessionalServicesPage() {
         </div>
       </section>
 
+      {/* Principles */}
+      <section className="border-y border-slate-200 bg-slate-50 py-20 sm:py-24">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Our Principles
+            </p>
+
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+              Build digital experiences around business priorities.
+            </h2>
+
+            <p className="mt-5 text-base leading-7 text-slate-600">
+              Professional digital solutions should balance presentation,
+              usability, scalability, and reliable technical foundations.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {principles.map((principle) => {
+              const Icon = principle.icon;
+
+              return (
+                <div
+                  key={principle.title}
+                  className="rounded-2xl border border-slate-200 bg-white p-7"
+                >
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-950 text-white">
+                    <Icon className="h-5 w-5" />
+                  </div>
+
+                  <h3 className="mt-6 text-lg font-semibold text-slate-950">
+                    {principle.title}
+                  </h3>
+
+                  <p className="mt-3 text-sm leading-7 text-slate-600">
+                    {principle.description}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* Client Experience */}
       <section className="border-y border-slate-200 bg-slate-50 py-20 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -420,9 +464,11 @@ export default function ProfessionalServicesPage() {
               <div className="grid gap-5 sm:grid-cols-2">
                 <div className="rounded-xl border border-slate-200 p-5">
                   <Search className="h-5 w-5 text-slate-700" />
+
                   <h3 className="mt-4 font-semibold text-slate-950">
                     Discover
                   </h3>
+
                   <p className="mt-2 text-sm leading-6 text-slate-600">
                     Help visitors find relevant services and information.
                   </p>
@@ -430,9 +476,11 @@ export default function ProfessionalServicesPage() {
 
                 <div className="rounded-xl border border-slate-200 p-5">
                   <BriefcaseBusiness className="h-5 w-5 text-slate-700" />
+
                   <h3 className="mt-4 font-semibold text-slate-950">
                     Understand
                   </h3>
+
                   <p className="mt-2 text-sm leading-6 text-slate-600">
                     Communicate expertise and business capabilities.
                   </p>
@@ -440,9 +488,11 @@ export default function ProfessionalServicesPage() {
 
                 <div className="rounded-xl border border-slate-200 p-5">
                   <MessageSquare className="h-5 w-5 text-slate-700" />
+
                   <h3 className="mt-4 font-semibold text-slate-950">
                     Connect
                   </h3>
+
                   <p className="mt-2 text-sm leading-6 text-slate-600">
                     Provide clear contact and enquiry opportunities.
                   </p>
@@ -450,9 +500,11 @@ export default function ProfessionalServicesPage() {
 
                 <div className="rounded-xl border border-slate-200 p-5">
                   <BarChart3 className="h-5 w-5 text-slate-700" />
+
                   <h3 className="mt-4 font-semibold text-slate-950">
                     Improve
                   </h3>
+
                   <p className="mt-2 text-sm leading-6 text-slate-600">
                     Use analytics and feedback to improve digital journeys.
                   </p>
@@ -540,6 +592,7 @@ export default function ProfessionalServicesPage() {
 
               <div className="mt-7 flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-5">
                 <LockKeyhole className="mt-0.5 h-5 w-5 shrink-0 text-slate-700" />
+
                 <p className="text-sm leading-6 text-slate-600">
                   Applications that handle accounts, client information, or
                   business data should use appropriate authentication,

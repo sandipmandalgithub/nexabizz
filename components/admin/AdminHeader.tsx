@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ExternalLink,
+  FolderKanban,
   LayoutDashboard,
   LogOut,
   Mail,
@@ -26,6 +27,11 @@ const navigationItems = [
     name: "Enquiries",
     href: "/admin/enquiries",
     icon: Mail,
+  },
+  {
+    name: "Projects",
+    href: "/admin/projects",
+    icon: FolderKanban,
   },
 ];
 

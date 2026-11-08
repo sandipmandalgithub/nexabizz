@@ -14,7 +14,6 @@ import {
   LockKeyhole,
   MonitorCheck,
   Search,
-  Settings2,
   Smartphone,
   Users,
   Workflow,
@@ -82,7 +81,7 @@ const challenges = [
     title: "Operational efficiency",
     description:
       "Digital systems can help reduce repetitive administrative work by organizing information and supporting structured workflows.",
-    icon: Settings2,
+    icon: Search,
   },
 ];
 
@@ -385,7 +384,7 @@ export default function EducationPage() {
           <div className="grid gap-12 lg:grid-cols-[1fr_1fr] lg:items-center">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Student & Parent Experience
+                Student &amp; Parent Experience
               </p>
 
               <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
@@ -488,7 +487,7 @@ export default function EducationPage() {
               </div>
 
               <h3 className="mt-6 text-lg font-semibold text-slate-950">
-                Data & Integrations
+                Data &amp; Integrations
               </h3>
 
               <p className="mt-3 text-sm leading-7 text-slate-600">
@@ -511,6 +510,52 @@ export default function EducationPage() {
                 architecture, and reliable deployment from the beginning.
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Principles */}
+      <section className="border-y border-slate-200 bg-slate-50 py-20 sm:py-24">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="max-w-2xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Experience Principles
+            </p>
+
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+              Build education platforms around clarity and usability.
+            </h2>
+
+            <p className="mt-5 text-base leading-7 text-slate-600">
+              Educational platforms should make information easy to discover
+              while providing a consistent and maintainable experience across
+              different devices and audiences.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-6 md:grid-cols-2">
+            {principles.map((principle) => {
+              const Icon = principle.icon;
+
+              return (
+                <div
+                  key={principle.title}
+                  className="rounded-2xl border border-slate-200 bg-white p-7 sm:p-8"
+                >
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-950 text-white">
+                    <Icon className="h-5 w-5" />
+                  </div>
+
+                  <h3 className="mt-6 text-xl font-semibold text-slate-950">
+                    {principle.title}
+                  </h3>
+
+                  <p className="mt-3 text-sm leading-7 text-slate-600">
+                    {principle.description}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>

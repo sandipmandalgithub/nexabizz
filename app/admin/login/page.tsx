@@ -4,8 +4,11 @@ import { FormEvent, useState } from "react";
 import { signIn } from "next-auth/react";
 import { ArrowRight, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function AdminLoginPage() {
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -29,7 +32,8 @@ export default function AdminLoginPage() {
         return;
       }
 
-      window.location.href = "/admin";
+      router.push("/admin");
+      router.refresh();
     } catch {
       setErrorMessage(
         "Unable to sign in right now. Please try again.",

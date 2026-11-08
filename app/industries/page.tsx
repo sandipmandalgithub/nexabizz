@@ -8,7 +8,6 @@ import {
   GraduationCap,
   HeartPulse,
   ShoppingBag,
-  Store,
   Users,
 } from "lucide-react";
 
@@ -299,7 +298,7 @@ export default function IndustriesPage() {
               <span className="text-sm font-bold text-slate-400">03</span>
 
               <h3 className="mt-4 text-lg font-semibold text-slate-950">
-                Build & Improve
+                Build &amp; Improve
               </h3>
 
               <p className="mt-3 text-sm leading-7 text-slate-600">

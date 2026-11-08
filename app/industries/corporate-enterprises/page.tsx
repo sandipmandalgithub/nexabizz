@@ -2,7 +2,6 @@ import Link from "next/link";
 import {
   Activity,
   ArrowRight,
-  BarChart3,
   CheckCircle2,
   Cloud,
   Code2,
@@ -14,10 +13,7 @@ import {
   LayoutDashboard,
   LockKeyhole,
   Network,
-  Search,
-  Settings2,
   ShieldCheck,
-  Smartphone,
   Users,
   Workflow,
 } from "lucide-react";

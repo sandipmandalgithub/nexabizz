@@ -1,7 +1,6 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  BarChart3,
   CheckCircle2,
   Code2,
   Database,
@@ -15,7 +14,6 @@ import {
   ShoppingBag,
   ShoppingCart,
   Smartphone,
-  Users,
   Workflow,
 } from "lucide-react";
 

@@ -8,7 +8,6 @@ import {
   Layers3,
   LayoutDashboard,
   ShoppingCart,
-  Smartphone,
   Workflow,
 } from "lucide-react";
 

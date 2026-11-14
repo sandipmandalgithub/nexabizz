@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  BookOpen,
   ExternalLink,
   FolderKanban,
   LayoutDashboard,
@@ -32,6 +33,11 @@ const navigationItems = [
     name: "Projects",
     href: "/admin/projects",
     icon: FolderKanban,
+  },
+  {
+    name: "Blogs",
+    href: "/admin/blogs",
+    icon: BookOpen,
   },
 ];
 
